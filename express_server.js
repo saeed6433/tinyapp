@@ -12,6 +12,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -39,8 +40,25 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  let newKey = generateRandomString()
+  urlDatabase[newKey] = req.body.longURL
+  //console.log(req.body); // Test: Log the POST request body to the console
+  //res.send("Ok"); // Test: Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/:${newKey}`);
+});
+
+function generateRandomString() {
+  return (Math.random() + 1).toString(36).substring(6);
+};
+
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: urlDatabase.id };
+  res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+   const longURL = urlDatabase[req.params.id]
+  res.redirect(longURL);
 });
 
 
