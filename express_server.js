@@ -51,16 +51,15 @@ function generateRandomString() {
   return (Math.random() + 1).toString(36).substring(6);
 };
 
-app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase.id };
-  res.render("urls_show", templateVars);
-});
-
 app.get("/u/:id", (req, res) => {
    const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id]
+ res.redirect("/urls");
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
