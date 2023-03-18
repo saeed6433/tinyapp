@@ -35,7 +35,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase.id };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
@@ -43,8 +43,8 @@ app.post("/urls", (req, res) => {
   let newKey = generateRandomString()
   urlDatabase[newKey] = req.body.longURL
   //console.log(req.body); // Test: Log the POST request body to the console
-  //res.send("Ok"); // Test: Respond with 'Ok' (we will replace this)
-  res.redirect(`/urls/:${newKey}`);
+  //res.send("Ok"); // Test: Respond with 'Ok' 
+  res.redirect(`/urls/${newKey}`);
 });
 
 function generateRandomString() {
@@ -58,6 +58,11 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id]
+ res.redirect("/urls");
+});
+
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.edit
  res.redirect("/urls");
 });
 
