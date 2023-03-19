@@ -1,9 +1,10 @@
+const cookieParser = require("cookie-parser");
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.use(express.urlencoded({ extended: true })); // The body-parser library will convert the request(POST) body from a Buffer into string that we can read.
-
+app.use(cookieParser()); // It solved the error of "username of undefined"
 
 app.set("view engine", "ejs"); // This tells the Express app to use EJS as its templating engine.
 
@@ -25,17 +26,19 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies.username };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {username: req.cookies.username };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies.username };
   res.render("urls_show", templateVars);
 });
 
@@ -69,7 +72,6 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username)
   res.redirect("/urls");
-  console.log(req.body.username)
 });
 
 app.listen(PORT, () => {
