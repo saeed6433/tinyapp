@@ -18,7 +18,7 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-<!-- *sigin form -->
+<!-- * Not sigined in condition-->
  <% if(!user) { %>
   <form class="form-inline" action="/login" method="get">
     <div class="form-group mb-2">
@@ -31,7 +31,7 @@
     </div>
   </form>
   <% } else { %>
-<!-- *sigined in user info -->
+<!-- *sigined in condition -->
   <form class="form-inline" action="/logout" method="POST">
     <div style="margin: 1em">
       <p>Logged in as <%= user.email %></p>

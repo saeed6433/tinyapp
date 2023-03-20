@@ -50,30 +50,30 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  let newKey = generateRandomString()
-  urlDatabase[newKey] = req.body.longURL
+  let newKey = generateRandomString();
+  urlDatabase[newKey] = req.body.longURL;
   //console.log(req.body); // Test: Log the POST request body to the console
-  //res.send("Ok"); // Test: Respond with 'Ok' 
+  //res.send("Ok"); // Test: Respond with 'Ok'
   res.redirect(`/urls/${newKey}`);
 });
 
-function generateRandomString() {
+const generateRandomString = function() {
   return (Math.random() + 1).toString(36).substring(6);
 };
 
 app.get("/u/:id", (req, res) => {
-   const longURL = urlDatabase[req.params.id]
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
- res.redirect("/urls");
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.edit
- res.redirect("/urls");
+  urlDatabase[req.params.id] = req.body.edit;
+  res.redirect("/urls");
 });
 
 
@@ -83,27 +83,29 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if(!req.body.email || !req.body.password){
-    res.status(400).send("Email or password is empty!")
-    return
+  if (!req.body.email || !req.body.password) {
+    res.status(400).send("Email or password is empty!");
+    return;
   }
-  if(userFinder(req.body.email)){
-    return res.status(400).send("Email already exists!")
+  if (userFinder(req.body.email)) {
+    return res.status(400).send("Email already exists!");
   }
-  let id = generateRandomString()
-  users[id]={}
-  users[id].id = id
-  users[id].email = req.body.email
-  users[id].password = req.body.password
-  res.cookie("user_id", id)
+  let id = generateRandomString();
+  users[id] = {};
+  users[id].id = id;
+  users[id].email = req.body.email;
+  users[id].password = req.body.password;
+  res.cookie("user_id", id);
   res.redirect("/urls");
 });
 
-function userFinder(req){
- for(let key in users){
-  if(users[key].email === req){ return true }
-  } return false
-}
+const userFinder = function(req) {
+  for (let key in users) {
+    if (users[key].email === req) {
+      return true;
+    }
+  } return false;
+};
 
 app.get("/login", (req, res) => {
   const templateVars = {user: users[req.cookies.user_id] };
@@ -111,21 +113,21 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  if(!userFinder(req.body.email)){
-    return res.status(403).send("Email NOT found!")
-  } 
-  for(let key in users){
-    if(users[key].email === req.body.email){ 
-     if(users[key].password === req.body.password) {
-      res.cookie("user_id", users[key].id)
-      res.redirect("/urls");
-     }
-    } return res.status(403).send("Wrong password!")
+  if (!userFinder(req.body.email)) {
+    return res.status(403).send("Email NOT found!");
+  }
+  for (let key in users) {
+    if (users[key].email === req.body.email) {
+      if (users[key].password === req.body.password) {
+        res.cookie("user_id", users[key].id);
+        res.redirect("/urls");
+      }
+    } return res.status(403).send("Wrong password!");
   }
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id", req.body.id)
+  res.clearCookie("user_id", req.body.id);
   res.redirect("/login");
 });
 
