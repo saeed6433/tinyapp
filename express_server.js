@@ -9,15 +9,31 @@ app.use(cookieParser()); // It solved the error of "username of undefined"
 app.set("view engine", "ejs"); // This tells the Express app to use EJS as its templating engine.
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b2xVn2 : {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "testID",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "userRandomID",
+  },
 };
+
 
 const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
+  },
+  testID: {
+    id: "testID",
+    email: "test@example.com",
+    password: "123",
   }
 };
 
@@ -33,25 +49,55 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+const urlsForUser = function(id) {
+  const urlsObj = {};
+  for (let key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      urlsObj[key] = urlDatabase[key].longURL;
+    }
+  } return urlsObj;
+};
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+  if (!req.cookies.user_id) {
+    res.send("Please sign in to see your URLs");
+  }
+  const templateVars = {
+    urls: urlsForUser(req.cookies.user_id),
+    user: users[req.cookies.user_id]
+  };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies.user_id) {
+    res.redirect("/login");
+  }
   const templateVars = {user: users[req.cookies.user_id] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
+  if (!req.cookies.user_id) {
+    res.redirect("/login");
+  }
+  if (req.cookies.user_id !== urlDatabase[req.params.id].userID) {
+    res.send(`You don't have ${req.params.id} ID in your URLs list!`);
+  }
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id].longURL,
+    user: users[req.cookies.user_id]
+  };
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.cookies.user_id) {
+    res.send("Please sign in to shorten the URL");
+  }
   let newKey = generateRandomString();
-  urlDatabase[newKey] = req.body.longURL;
+  urlDatabase[newKey].longURL = req.body.longURL;
   //console.log(req.body); // Test: Log the POST request body to the console
   //res.send("Ok"); // Test: Respond with 'Ok'
   res.redirect(`/urls/${newKey}`);
@@ -62,22 +108,46 @@ const generateRandomString = function() {
 };
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  if (!(req.params.id in urlDatabase)) {
+    res.send("This ID does not exist!");
+  }
+  const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  if (!(req.params.id in urlDatabase)) {
+    res.send("This ID does not exist!");
+  }
+  if (!req.cookies.user_id) {
+    res.send("Please sign in to edit the URL");
+  }
+  if (req.cookies.user_id !== urlDatabase[req.params.id].userID) {
+    res.send(`You don't have ${req.params.id} ID in your URLs list!`);
+  }
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 
 app.post("/urls/:id", (req, res) => {
+  if (!(req.params.id in urlDatabase)) {
+    res.send("This ID does not exist!");
+  }
+  if (!req.cookies.user_id) {
+    res.send("Please sign in to edit the URL");
+  }
+  if (req.cookies.user_id !== urlDatabase[req.params.id].userID) {
+    res.send(`You don't have ${req.params.id} ID in your URLs list!`);
+  }
   urlDatabase[req.params.id] = req.body.edit;
   res.redirect("/urls");
 });
 
 
 app.get("/register", (req, res) => {
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  }
   const templateVars = {user: users[req.cookies.user_id] };
   res.render("register_view", templateVars);
 });
@@ -108,6 +178,9 @@ const userFinder = function(req) {
 };
 
 app.get("/login", (req, res) => {
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  }
   const templateVars = {user: users[req.cookies.user_id] };
   res.render("login_view", templateVars);
 });
@@ -122,7 +195,8 @@ app.post("/login", (req, res) => {
         res.cookie("user_id", users[key].id);
         res.redirect("/urls");
       }
-    } return res.status(403).send("Wrong password!");
+    }
+    return res.status(403).send("Wrong password!");
   }
 });
 
