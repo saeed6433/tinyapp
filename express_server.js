@@ -4,6 +4,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+const { getUserByEmail } = require('./helper');
+
 const bcrypt = require("bcryptjs");
 
 app.use(express.urlencoded({ extended: true })); // The body-parser library will convert the request(POST) body from a Buffer into string that we can read.
@@ -200,22 +202,22 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  if (!userFinder(req.body.email)) {
+  const loggedInUser = getUserByEmail(req.body.email, users);
+
+  if (!loggedInUser) {
     return res.status(403).send("Email NOT found!");
   }
-  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-  for (let key in users) {
-    if (users[key].email === req.body.email) {
-      // if (users[key].password === req.body.password)  // without bcrypt
-      if (bcrypt.compareSync(users[key].password, hashedPassword)) {
-        //res.cookie("user_id", users[key].id); // with cookieParser
-        req.session.user_id = users[key].id;   // with cookieSission
 
-        res.redirect("/urls");
-      }
-    }
-    return res.status(403).send("Wrong password!");
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+  // if (loggedInUser.password === req.body.password)  // without bcrypt
+  if (bcrypt.compareSync(loggedInUser.password, hashedPassword)) {
+    
+    //res.cookie("user_id", loggedInUser.id); // with cookieParser
+    req.session.user_id = loggedInUser.id;   // with cookieSission
+
+    res.redirect("/urls");
   }
+  return res.status(403).send("Wrong password!");
 });
 
 app.post("/logout", (req, res) => {
